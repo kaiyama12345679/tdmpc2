@@ -26,13 +26,18 @@ This repository contains code for training and evaluating both single-task onlin
 
 You will need a machine with a GPU and at least 12 GB of RAM for single-task online RL with TD-MPC**2**, and 128 GB of RAM for multi-task offline RL on our provided 80-task dataset. A GPU with at least 8 GB of memory is recommended for single-task online RL and for evaluation of the provided multi-task models (up to 317M parameters). Training of the 317M parameter model requires a GPU with at least 24 GB of memory.
 
-We provide a `Dockerfile` for easy installation. You can build the docker image by running
-
+We provide a `Dockerfile` and the `singularity.def` file for easy installation. 
+You can build the docker image by running
 ```
 cd docker && docker build . -t <user>/tdmpc2:1.0.0
 ```
+or if you want to use singulairty container, you can build the singularity image by running
+```
+cd docker && singularity build --fakeroot tdmpc2.sif singularity.def 
+```
+Before this, you have to set <your_user_name> to `MY_USER` in the `singularity.def`
 
-This docker image contains all dependencies needed for running DMControl, Meta-World, and ManiSkill2 experiments.
+These images contain all dependencies needed for running DMControl, Meta-World, and ManiSkill2 experiments.
 
 If you prefer to install dependencies manually, start by installing dependencies via `conda` by running the following command:
 

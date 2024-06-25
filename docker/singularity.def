@@ -1,0 +1,89 @@
+Bootstrap: docker
+From: nvidia/cudagl:11.3.1-devel-ubuntu20.04
+
+%files
+    nvidia_icd.json /usr/share/vulkan/icd.d/nvidia_icd.json
+    environment.yaml /root
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    #packages
+    apt-get -y update && \
+    apt-get install -y --no-install-recommends build-essential git nano rsync vim tree curl \
+    wget unzip htop tmux xvfb patchelf ca-certificates bash-completion libjpeg-dev libpng-dev \
+    ffmpeg cmake swig libssl-dev libcurl4-openssl-dev libopenmpi-dev python3-dev zlib1g-dev \
+    qtbase5-dev qtdeclarative5-dev libglib2.0-0 libglu1-mesa-dev libgl1-mesa-dev libvulkan1 \
+    libgl1-mesa-glx libosmesa6 libosmesa6-dev libglew-dev mesa-utils && \
+    apt-get clean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /root/.ssh
+
+    # miniconda
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    . /opt/conda/etc/profile.d/conda.sh && \
+    conda init && \
+    conda clean -ya
+
+    export PATH=/opt/conda/bin:$PATH
+
+    # conda environment
+    conda update conda && \
+    conda env update -n base -f /root/environment.yaml && \
+    rm /root/environment.yaml && \
+    conda clean -ya && \
+    pip cache purge
+
+    mkdir /env
+
+    #mujoco 2.1.0
+    export MUJOCO_GL=egl
+    export LD_LIBRARY_PATH=/env/.mujoco/mujoco210/bin:${LD_LIBRARY_PATH}
+
+    mkdir -p /env/.mujoco && \
+    cd /env/.mujoco && \ 
+    wget https://www.tdmpc2.com/files/mjkey.txt && \
+    wget https://github.com/deepmind/mujoco/releases/download/2.1.0/mujoco210-linux-x86_64.tar.gz && \
+    tar -xzf mujoco210-linux-x86_64.tar.gz && \
+    rm mujoco210-linux-x86_64.tar.gz && \
+    python -c "import mujoco_py"
+
+    #gym
+    pip install gym==0.21.0
+
+    #metaworld
+    pip install git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb
+
+    
+    #maniskill2
+    export MS2_ASSET_DIR=/env/data
+
+    pip install mani-skill2==0.4.1 && \
+    cd /env && \
+    python -m mani_skill2.utils.download_asset all -y
+
+    # myosuite (conflicts with meta-world / mani-skill2)
+    # pip install myosuite
+
+    # success!
+    echo "Successfully built TD-MPC2 Singularity image!"
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    export MUJOCO_GL=egl
+    export LD_LIBRARY_PATH=/env/.mujoco/mujoco210/bin:${LD_LIBRARY_PATH}
+    export MUJOCO_PY_MUJOCO_PATH=/env/.mujoco
+    export MS2_ASSET_DIR=/env/data
+
+    
+
+
+
+
+
+
+
+
